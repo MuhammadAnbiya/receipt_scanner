@@ -7,7 +7,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 export const maxDuration = 30; // Increase timeout for API call
 
 // Retry function for handling transient errors (e.g., 503)
-async function generateContentWithRetry(model: any, contents:any, maxRetries: number = 3) {
+async function generateContentWithRetry(model: any, contents: any, maxRetries: number = 3) {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await model.generateContent(contents);
