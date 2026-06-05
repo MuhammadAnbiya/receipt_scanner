@@ -12,18 +12,18 @@ async function generateContentWithRetry(model: any, contents: any, maxRetries: n
     try {
       return await model.generateContent(contents);
     } catch (error: unknown) {
-      // Cast error ke tipe Error agar properti .message bisa diakses
-      const err = error as Error;
-      
-      // Check if it's a 503 Service Unavailable error
-      if (err.message && (err.message.includes('503') || err.message.includes('Service Unavailable'))) {
-        if (i === maxRetries - 1) throw err; // Last retry, rethrow
-        // Exponential backoff: wait 2^i seconds before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
-        continue;
+      // Pengecekan tipe data agar TypeScript mengenali 'error' sebagai objek Error
+      if (error instanceof Error) {
+        // Check if it's a 503 Service Unavailable error
+        if (error.message.includes('503') || error.message.includes('Service Unavailable')) {
+          if (i === maxRetries - 1) throw error; // Last retry, rethrow
+          // Exponential backoff: wait 2^i seconds before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+          continue;
+        }
       }
-      // If it's not a 503, rethrow immediately
-      throw err;
+      // Jika bukan tipe Error atau bukan error 503, lempar kembali
+      throw error;
     }
   }
 }
