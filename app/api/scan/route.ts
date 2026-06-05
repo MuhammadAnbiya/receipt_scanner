@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
- // Initialize Gemini AI
+// Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export const maxDuration = 30; // Increase timeout for API call
@@ -11,16 +11,19 @@ async function generateContentWithRetry(model: any, contents: any, maxRetries: n
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await model.generateContent(contents);
-    } catch (error) {
+    } catch (error: unknown) {
+      // Cast error ke tipe Error agar properti .message bisa diakses
+      const err = error as Error;
+      
       // Check if it's a 503 Service Unavailable error
-      if (error.message && (error.message.includes('503') || error.message.includes('Service Unavailable'))) {
-        if (i === maxRetries - 1) throw error; // Last retry, rethrow
+      if (err.message && (err.message.includes('503') || err.message.includes('Service Unavailable'))) {
+        if (i === maxRetries - 1) throw err; // Last retry, rethrow
         // Exponential backoff: wait 2^i seconds before retrying
         await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
         continue;
       }
       // If it's not a 503, rethrow immediately
-      throw error;
+      throw err;
     }
   }
 }
